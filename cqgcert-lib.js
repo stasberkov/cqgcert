@@ -73,7 +73,7 @@ function uninstallCommonPlusCqgCa() {
 
 function listCaConfigurations() {
     exec(util.format("npm config get cafile"), function (err, stdout, stderr) {
-        console.log("npm ca file (global)");
+        console.log("npm ca file");
         if (err) {
             console.log(err);
             return;
@@ -81,7 +81,7 @@ function listCaConfigurations() {
         console.log(stdout);
     });
     execFile("git", ["config", "--get", "http.sslCAInfo"], function (err, stdout, stderr) {
-        console.log("git ca file (global)");
+        console.log("git ca file");
         if (err) {
             console.log(err);
         };
