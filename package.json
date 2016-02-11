@@ -1,7 +1,7 @@
 {
     "name": "cqgcert",
-    "version": "1.0.10",
-    "description": "Common plus CQG CA certificates",
+    "version": "1.1.0",
+    "description": "Common and CQG CA certificates",
     "main": "cqgcert-lib.js",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"

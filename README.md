@@ -1,11 +1,13 @@
 # cqgcert
-Nodejs and git CQG certificate installer/uninstaller/manager
+CQG certificate installer for NodeJS, Git and may be more.
 
-Install cqg cert manager tool:
+## How to use
+
+1. Install CQG cert tool
 ```
 npm install cqgcert -g
 ```
-Install cqg CA certificate:
+2. Install CQG CA certificate
 ```
 cqgcert install
 ```

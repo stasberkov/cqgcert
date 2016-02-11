@@ -3,59 +3,39 @@ var fs = require('fs');
 var os = require('os');
 var path = require('path');
 var execFile = require('child_process').execFile;
+var execFileSync = require('child_process').execFileSync;
 var exec = require('child_process').exec;
-var program = require('commander');
+var execSync = require('child_process').execSync;
 var util = require("util");
-var pjson = require('./package.json');
 
 var certFileName = "ca-plus-cqg.pem";
 var homePath = os.homedir();
-var targetFilePath = path.join(homePath, certFileName);
+exports.targetFilePath = path.join(homePath, certFileName);
 var sourceFilePath = path.join(__dirname, certFileName);
 
-program
-    .version(pjson.version);
-
-program
-    .command("install")
-    .description("Install common ca certificates and cqg ca certificate for nodejs and git")
-    .action(function (env, options) {
-        console.log("Install common and cqg ca certificates...");
-        installCommonPlusCqgCa();
-        console.log("Done!");
-    });
-
-program
-    .command("uninstall")
-    .description("Remove custom certificates from nodejs and git")
-    .action(function (env, options) {
-        console.log("Remove custom certificates from nodejs and git...");
-        uninstallCommonPlusCqgCa();
-        console.log("Done!");
-    });
-
-program
-    .command("list")
-    .description("Displays currently used certificates")
-    .action(function (env, options) {
-        console.log("List currently used ca files");
-        listCaConfigurations();
-    });
-
-program.parse(process.argv);
-
-  if (!process.argv.slice(2).length) {
-    program.help();
-  }
-
-function installCommonPlusCqgCa() {
-    var targetFileStream = fs.createWriteStream(targetFilePath);
+exports.installCaFiles = function () {
+    var targetFileStream = fs.createWriteStream(exports.targetFilePath);
     var sourceFileStream = fs.createReadStream(sourceFilePath);
     sourceFileStream.pipe(targetFileStream);
-    registerCommonPlusCqgCa(targetFilePath);
+    exports.registerCaFiles(exports.targetFilePath);
 }
 
-function uninstallCommonPlusCqgCa() {
+exports.resetCaFiles = function () {
+    exports.resetNpmCaFile();
+    exports.resetGitCaFile();
+}
+
+exports.listCaFiles = function () {
+    console.log("npm ca file: ", exports.getNpmCaFilePath());
+    console.log("git ca file: ", exports.getGitCaFilePath());
+}
+
+exports.registerCaFiles = function (caFile) {
+    exports.registerNpmCaFile(caFile);
+    exports.registerGitCaFile(caFile);
+}
+
+exports.resetNpmCaFile = function () {
     exec(util.format("npm config delete cafile"), function (err, stdout, stderr) {
         if (err) {
             console.log("npm", err);
@@ -63,6 +43,9 @@ function uninstallCommonPlusCqgCa() {
         };
         console.log(stdout);
     });
+}
+
+exports.resetGitCaFile = function () {
     execFile("git", ["config", "--global", "--unset", "http.sslCAInfo"], function (err, stdout, stderr) {
         if (err) {
             console.log("git", err);
@@ -71,26 +54,7 @@ function uninstallCommonPlusCqgCa() {
     });
 }
 
-function listCaConfigurations() {
-    exec(util.format("npm config get cafile"), function (err, stdout, stderr) {
-        console.log("npm ca file");
-        if (err) {
-            console.log(err);
-            return;
-        };
-        console.log(stdout);
-    });
-    execFile("git", ["config", "--get", "http.sslCAInfo"], function (err, stdout, stderr) {
-        console.log("git ca file");
-        if (err) {
-            console.log(err);
-        };
-        console.log(stdout);
-        console.log(stderr);
-    });
-}
-
-function registerCommonPlusCqgCa(caFile) {
+exports.registerNpmCaFile = function (caFile) {
     exec(util.format("npm config set cafile \"%s\"", caFile), function (err, stdout, stderr) {
         if (err) {
             console.log(err);
@@ -98,11 +62,25 @@ function registerCommonPlusCqgCa(caFile) {
         };
         console.log(stdout);
     });
+}
+
+exports.registerGitCaFile = function (caFile) {
     execFile("git", ["config", "--global", "http.sslCAInfo", caFile], function (err, stdout, stderr) {
         if (err) {
             console.log(err);
         };
         console.log(stdout);
-        console.log(stderr);
     });
+}
+
+exports.getGitCaFilePath = function () {
+    var gitRes = execFileSync("git", ["config", "--get", "http.sslCAInfo"]).toString();
+    var filePath = gitRes.replace(/[\n\t\r]/g, "");
+    return filePath;
+}
+
+exports.getNpmCaFilePath = function () {
+    var nodeRes = execSync("npm config get cafile").toString();
+    var filePath = nodeRes.replace(/[\n\t\r]/g, "");
+    return filePath;
 }
